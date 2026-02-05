@@ -1,0 +1,5 @@
+{
+  "name": "Factorysystem",
+  "description": "A comprehensive dispatch management system with distinct Admin (Analytics) and User (Operations) roles. Features real-time dispatch tracking, challan management, and AI-powered insights.",
+  "requestFramePermissions": []
+}
