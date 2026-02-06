@@ -3,7 +3,8 @@ import { Layout } from './components/Layout';
 import { UserDashboard } from './components/user/UserDashboard';
 import { Dashboard } from './components/admin/Dashboard';
 import { SlittingDashboard } from './components/slitting/SlittingDashboard'; 
-import { ChemicalDashboard } from './components/chemical/ChemicalDashboard'; // New
+import { ChemicalDashboard } from './components/chemical/ChemicalDashboard';
+import { InstallPrompt } from './components/InstallPrompt';
 import { subscribeToData } from './services/storageService';
 import { Role, AppData } from './types';
 
@@ -17,7 +18,6 @@ const App: React.FC = () => {
   // App State
   const [role, setRole] = useState<Role>(Role.ADMIN);
   const [view, setView] = useState<string>('dashboard');
-  // Add missing plantProductionPlans property to initial state to satisfy AppData interface
   const [data, setData] = useState<AppData>({ 
     parties: [], 
     dispatches: [], 
@@ -32,13 +32,10 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Connect to Firebase Realtime Listeners
     const unsubscribe = subscribeToData((newData) => {
       setData(newData);
       setLoading(false);
     });
-
-    // Cleanup on unmount
     return () => unsubscribe();
   }, []);
 
@@ -71,19 +68,20 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
     setAuthId('');
     setAuthPass('');
-    setRole(Role.ADMIN); // Default reset
+    setRole(Role.ADMIN);
   };
 
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-6">
+        <InstallPrompt />
         <div className="glass w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/50 backdrop-blur-xl animate-in fade-in zoom-in duration-500">
            <div className="flex flex-col items-center mb-10">
              <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg shadow-indigo-200 transform rotate-3">
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
              </div>
              <h1 className="text-3xl font-bold text-slate-800 tracking-tight">RDMS</h1>
-             <p className="text-slate-500 font-medium">Production & Dispatch</p>
+             <p className="text-slate-500 font-medium">factorysystem.in</p>
            </div>
            
            <form onSubmit={handleLogin} className="space-y-6">
@@ -121,7 +119,6 @@ const App: React.FC = () => {
               </button>
            </form>
 
-           {/* Quick Access Section */}
            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
               <div className="relative flex justify-center text-xs uppercase"><span className="bg-white/50 backdrop-blur px-2 text-slate-400 font-bold tracking-wider">Operator Access</span></div>
@@ -135,11 +132,11 @@ const App: React.FC = () => {
               <div className="bg-white/20 p-1 rounded-lg">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-              <span>Enter as Slitting Operator</span>
+              <span>Slitting Kiosk</span>
            </button>
 
            <div className="mt-8 text-center">
-             <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">Authorized System V1.0</span>
+             <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">Powered by factorysystem.in</span>
            </div>
         </div>
       </div>
@@ -162,6 +159,7 @@ const App: React.FC = () => {
 
   return (
     <Layout currentRole={role} setRole={setRole} currentView={view} setView={setView} onLogout={handleLogout}>
+      <InstallPrompt />
       {role === Role.ADMIN && <Dashboard data={data} />}
       {role === Role.USER && <UserDashboard data={data} onUpdate={() => {}} />}
       {role === Role.SLITTING && <SlittingDashboard data={data} onUpdate={() => {}} />}

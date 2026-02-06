@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AppData, DispatchStatus, SlittingJob } from '../../types';
 import { 
     syncAllDataToCloud, triggerDashboardSetup, setGoogleSheetUrl, 
-    getGoogleSheetUrl, restoreFullBackup 
+    getGoogleSheetUrl, restoreFullBackup, loadDemoData
 } from '../../services/storageService';
 import { 
     Cloud, RefreshCw, Download, Settings, CircleCheck, 
@@ -198,6 +197,13 @@ export const MasterSheet: React.FC<Props> = ({ data }) => {
                     <UploadCloud size={18}/> Restore Data
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleRestore} className="hidden" accept=".json" />
+
+                  <button 
+                    onClick={() => { if(confirm("Wipe current local data and load 80+ sample industrial records?")) loadDemoData(); }}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95"
+                  >
+                    <Database size={18}/> Load Demo Data
+                  </button>
 
                   <button 
                     onClick={() => setIsSetupOpen(true)}

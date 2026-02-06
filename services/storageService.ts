@@ -184,31 +184,25 @@ export const loadDemoData = async () => {
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
 
-    // 1. GENERATE 20 RANDOM INDUSTRIAL PARTIES
-    const partyNames = [
-        "EXCEL PACKAGING PVT LTD", "MODERN LABELS & PRINTS", "SKYLINE FLEXIBLES", 
-        "OCEANIC POLYMERS", "GLOBAL PRINTS", "PRECISION PACK SOLUTIONS", 
-        "VIBRANT COLORS CORP", "UNIFIED PACKAGING", "LEGACY LABELS", "PRIME FLEX",
-        "MATRIX CONVERTORS", "APEX POLY PACK", "ZENITH FLEXIBLES", "CRYSTAL LABELS",
-        "HORIZON FOODS", "GALAXY DAIRIES", "TITAN BEVERAGES", "PIONEER SOLUTIONS",
-        "NOVA PACK INDUSTRIES", "OMEGA PRINTS"
-    ];
-    const parties = partyNames.map((name, i) => ({
-        id: `demo-p-${i + 1}`,
-        name: name,
-        code: `REL/0${10 + i}`,
-        contact: "+91 98765 43210",
-        address: "Industrial Area Phase " + (i % 3 + 1) + ", Unit " + (i + 1)
-    }));
-    parties.forEach(p => batch.set(doc(db, "parties", p.id), p));
+    // 1. GENERATE 22 RANDOM INDUSTRIAL PARTIES
+    const suffixes = ["Packaging", "Flexibles", "Labels", "Prints", "Polymers", "Solutions", "Industries", "Converters", "Films"];
+    const prefixes = ["Global", "Apex", "Matrix", "Zenith", "Oceanic", "Aura", "Prime", "Precision", "Nexus", "Vibrant", "Modern", "Skyline"];
+    const parties: Party[] = [];
+    for (let i = 0; i < 22; i++) {
+        const name = `${prefixes[i % prefixes.length]} ${suffixes[i % suffixes.length]} PVT LTD`;
+        const code = `REL/${(100 + i).toString()}`;
+        const p = { id: `demo-p-${i}`, name, code, contact: `+91 98000 00${i.toString().padStart(2, '0')}`, address: `Industrial Phase ${i % 3 + 1}, Plot ${i * 10 + 5}` };
+        parties.push(p);
+        batch.set(doc(db, "parties", p.id), p);
+    }
 
-    // 2. GENERATE 20 RANDOM DISPATCHES (JOBS)
+    // 2. GENERATE 22 DISPATCH JOBS
     const jobStatuses = [DispatchStatus.PENDING, DispatchStatus.SLITTING, DispatchStatus.PRINTING, DispatchStatus.COMPLETED, DispatchStatus.DISPATCHED];
-    for (let i = 1; i <= 20; i++) {
-        const jobDate = i <= 8 ? today : (i <= 15 ? yesterday : lastWeek);
+    for (let i = 0; i < 22; i++) {
+        const jobDate = i < 8 ? today : (i < 15 ? yesterday : lastWeek);
         const pIdx = i % parties.length;
         const status = jobStatuses[i % jobStatuses.length];
-        const weight = 45.5 + (i * 12.3);
+        const weight = 40 + (Math.random() * 200);
         const dispatch: DispatchEntry = {
             id: `demo-d-${i}`,
             dispatchNo: (2000 + i).toString(),
@@ -216,67 +210,67 @@ export const loadDemoData = async () => {
             partyId: parties[pIdx].id,
             status: status,
             totalWeight: weight,
-            totalPcs: 1200 * i,
-            isTodayDispatch: i < 5,
+            totalPcs: 1000 + (Math.floor(Math.random() * 50) * 100),
+            isTodayDispatch: i < 6,
             createdAt: new Date(jobDate).toISOString(),
             updatedAt: new Date(jobDate).toISOString(),
-            rows: [{ 
-                id: `demo-r-${i}`, 
-                size: (150 + (i % 5) * 20) + 'mm', 
-                sizeType: i % 2 === 0 ? 'ROLL' : 'ST.SEAL', 
-                micron: 35 + (i % 3) * 5, 
-                weight: weight, 
-                pcs: 1200 * i, 
-                bundle: 5 + (i % 10), 
-                status: status, 
-                isCompleted: status === DispatchStatus.COMPLETED || status === DispatchStatus.DISPATCHED, 
+            rows: [{
+                id: `demo-dr-${i}`,
+                size: `${120 + (i * 10)}mm`,
+                sizeType: i % 2 === 0 ? 'ROLL' : 'ST.SEAL',
+                micron: 35 + (i % 3) * 5,
+                weight: weight,
+                pcs: 1000 + (Math.floor(Math.random() * 50) * 100),
+                bundle: 5 + (i % 8),
+                status,
+                isCompleted: status === DispatchStatus.COMPLETED || status === DispatchStatus.DISPATCHED,
                 isLoaded: false,
-                productionWeight: status === DispatchStatus.COMPLETED ? weight + 0.5 : 0,
-                wastage: status === DispatchStatus.COMPLETED ? 0.5 : 0
+                productionWeight: status === DispatchStatus.COMPLETED ? weight + 0.8 : 0,
+                wastage: status === DispatchStatus.COMPLETED ? 0.8 : 0
             }]
         };
         batch.set(doc(db, "dispatches", dispatch.id), dispatch);
     }
 
-    // 3. GENERATE 20 RANDOM CHALLANS (BILLS)
-    for (let i = 1; i <= 20; i++) {
-        const billDate = i <= 10 ? today : yesterday;
-        const pIdx = (i + 5) % parties.length;
+    // 3. GENERATE 22 CHALLANS
+    for (let i = 0; i < 22; i++) {
+        const billDate = i < 11 ? today : yesterday;
+        const pIdx = (i + 4) % parties.length;
         const mode = i % 3 === 0 ? PaymentMode.CASH : PaymentMode.UNPAID;
         const challan: Challan = {
             id: `demo-c-${i}`,
             challanNumber: (500 + i).toString(),
             partyId: parties[pIdx].id,
             date: billDate,
-            totalWeight: 12.5 + i,
-            totalAmount: 15400 + (i * 1500),
+            totalWeight: 15 + (Math.random() * 50),
+            totalAmount: 8000 + (i * 1200),
             paymentMode: mode,
             createdAt: new Date(billDate).toISOString(),
-            lines: [{ 
-                id: `demo-cl-${i}`, 
-                size: (120 + (i % 4) * 10) + ' x 450', 
-                weight: 12.5 + i, 
-                rate: 125 + (i % 10), 
-                amount: 15400 + (i * 1500) 
+            lines: [{
+                id: `demo-cl-${i}`,
+                size: `${150 + (i * 5)} x Grade A`,
+                weight: 15 + (Math.random() * 50),
+                rate: 450 + (i * 5),
+                amount: 8000 + (i * 1200)
             }]
         };
         batch.set(doc(db, "challans", challan.id), challan);
     }
 
     // 4. GENERATE 20 SLITTING JOBS
-    for (let i = 1; i <= 20; i++) {
-        const slitDate = i <= 10 ? today : yesterday;
+    for (let i = 0; i < 20; i++) {
+        const slitDate = i < 10 ? today : yesterday;
         const job: SlittingJob = {
             id: `demo-slit-${i}`,
             date: slitDate,
             jobNo: (3000 + i).toString(),
             jobCode: parties[i % parties.length].code || parties[i % parties.length].name,
             planMicron: 40,
-            planQty: 250,
+            planQty: 200 + (i * 20),
             planRollLength: 2000,
             coils: [
-                { id: `c-${i}-1`, number: 1, size: '250mm', rolls: 10, producedBundles: 0 },
-                { id: `c-${i}-2`, number: 2, size: '350mm', rolls: 8, producedBundles: 0 }
+                { id: `dc-${i}-1`, number: 1, size: '200mm', rolls: 12, producedBundles: 0 },
+                { id: `dc-${i}-2`, number: 2, size: '300mm', rolls: 10, producedBundles: 0 }
             ],
             rows: [],
             status: i % 4 === 0 ? 'COMPLETED' : (i % 3 === 0 ? 'IN_PROGRESS' : 'PENDING'),
@@ -287,27 +281,27 @@ export const loadDemoData = async () => {
     }
 
     // 5. PRODUCTION PLANS
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 0; i < 10; i++) {
         const plan: ProductionPlan = {
             id: `demo-plan-${i}`,
             date: today,
             partyName: parties[i % parties.length].name,
-            size: (200 + (i % 5) * 50).toString(),
+            size: (200 + (i * 20)).toString(),
             type: i % 2 === 0 ? "Printing" : "Roll",
-            weight: 100 + (i * 20),
+            weight: 150 + (i * 30),
             micron: 40,
-            meter: 5000 + (i * 100),
+            meter: 4000 + (i * 500),
             cuttingSize: 450,
-            pcs: 12000,
+            pcs: 10000,
             status: 'PENDING',
             createdAt: new Date().toISOString()
         };
         batch.set(doc(db, "production_plans", plan.id), plan);
     }
 
-    // 6. CHEMICAL DATA
-    batch.set(doc(db, "chemical_stock", "main"), { dop: 1250, stabilizer: 240, epoxy: 450, g161: 180, nbs: 220 });
+    // 6. CHEMICALS
+    batch.set(doc(db, "chemical_stock", "main"), { dop: 1500, stabilizer: 350, epoxy: 500, g161: 200, nbs: 300 });
 
     await batch.commit();
-    alert("80+ Realistic Demo Records Successfully Loaded! The system is now fully populated for presentation.");
+    alert("System fully updated with 80+ unique industrial demo records!");
 };
